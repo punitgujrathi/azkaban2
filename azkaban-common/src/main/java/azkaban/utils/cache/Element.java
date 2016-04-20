@@ -24,7 +24,7 @@ public class Element<T> {
 
   public Element(Object key, T element) {
     this.key = key;
-    creationTime = System.currentTimeMillis();
+    creationTime = System.nanoTime();
     lastAccessTime = creationTime;
     this.element = element;
   }
@@ -34,7 +34,7 @@ public class Element<T> {
   }
 
   public T getElement() {
-    lastAccessTime = System.currentTimeMillis();
+    lastAccessTime = System.nanoTime();
     return element;
   }
 

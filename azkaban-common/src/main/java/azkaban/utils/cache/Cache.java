@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Cache {
   private long nextUpdateTime = 0;
   private long updateFrequency = 30 * 60 * 1000;
+  private static long MS_TO_NANO = 1000 * 1000;
   private int maxCacheSize = -1;
 
   private long expireTimeToLive = -1; // Never expires
@@ -81,7 +82,7 @@ public class Cache {
   }
 
   public Cache setExpiryTimeToLiveMs(long time) {
-    this.expireTimeToLive = time;
+    this.expireTimeToLive = time * MS_TO_NANO;
     if (time > 0) {
       manager.update();
     }
@@ -90,7 +91,7 @@ public class Cache {
   }
 
   public Cache setExpiryIdleTimeMs(long time) {
-    this.expireTimeToIdle = time;
+    this.expireTimeToIdle = time * MS_TO_NANO;
     if (time > 0) {
       manager.update();
     }
@@ -178,12 +179,12 @@ public class Cache {
 
   private boolean shouldExpire(Element<?> elem) {
     if (expireTimeToLive > -1) {
-      if (System.currentTimeMillis() - elem.getCreationTime() > expireTimeToLive) {
+      if (System.nanoTime() - elem.getCreationTime() > expireTimeToLive) {
         return true;
       }
     }
     if (expireTimeToIdle > -1) {
-      if (System.currentTimeMillis() - elem.getLastUpdateTime() > expireTimeToIdle) {
+      if (System.nanoTime() - elem.getLastUpdateTime() > expireTimeToIdle) {
         return true;
       }
     }
