@@ -26,14 +26,18 @@ public class CacheManager {
 
   private long updateFrequency = UPDATE_FREQUENCY;
   private Set<Cache> caches;
-  private static CacheManager manager = null;
+  private static volatile CacheManager manager = null;
   private final CacheManagerThread updaterThread;
 
   private boolean activeExpiry = false;
 
   public static CacheManager getInstance() {
     if (manager == null) {
-      manager = new CacheManager();
+      synchronized (CacheManager.class){
+        if(manager == null){
+          manager = new CacheManager();
+        }
+      }
     }
 
     return manager;
@@ -46,7 +50,7 @@ public class CacheManager {
     updaterThread.start();
   }
 
-  public static void setUpdateFrequency(long updateFreqMs) {
+  public void setUpdateFrequency(long updateFreqMs) {
     manager.internalUpdateFrequency(updateFreqMs);
   }
 
