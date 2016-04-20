@@ -34,7 +34,7 @@ public class PythonJob extends LongArgJob {
           jobProps.getString(SCRIPT_KEY)
         },
         sysProps, jobProps, log,
-        ImmutableSet.of(PYTHON_BINARY_KEY, SCRIPT_KEY, JOB_TYPE));
+        ImmutableSet.of(PYTHON_BINARY_KEY, SCRIPT_KEY, JOB_TYPE,WORKING_DIR,"fullPath"));
   }
 
 }
