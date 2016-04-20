@@ -84,6 +84,7 @@ public class CacheTest {
 
   @Test
   public void testTimeToLiveExpiry() {
+    CacheManager.setUpdateFrequency(200);
     CacheManager manager = CacheManager.getInstance();
     Cache cache = manager.createCache();
 
@@ -121,6 +122,7 @@ public class CacheTest {
 
   @Test
   public void testIdleExpireExpiry() {
+    CacheManager.setUpdateFrequency(250);
     CacheManager manager = CacheManager.getInstance();
     Cache cache = manager.createCache();
 

@@ -50,7 +50,8 @@ public class CacheManager {
     updaterThread.start();
   }
 
-  public void setUpdateFrequency(long updateFreqMs) {
+  public static void setUpdateFrequency(long updateFreqMs) {
+    getInstance();
     manager.internalUpdateFrequency(updateFreqMs);
   }
 
