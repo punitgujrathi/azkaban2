@@ -42,6 +42,7 @@ public class JavaProcessJob extends ProcessJob {
   public JavaProcessJob(String jobid, Props sysProps, Props jobProps,
       Logger logger) {
     super(jobid, sysProps, jobProps, logger);
+    this.getJobProps().put("azkaban.job.id", jobid);
   }
 
   @Override
@@ -60,6 +61,9 @@ public class JavaProcessJob extends ProcessJob {
     command += getJavaClass() + " ";
     command += getMainArguments();
 
+    debug("command = " + command);
+    debug("sysProps = " + sysProps);
+    debug("jobProps = " + jobProps);
     return command;
   }
 
