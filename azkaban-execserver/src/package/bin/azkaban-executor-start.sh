@@ -38,13 +38,16 @@ echo $azkaban_dir;
 echo $CLASSPATH;
 
 executorport=`cat $azkaban_dir/conf/azkaban.properties | grep executor.port | cut -d = -f 2`
+jmxremote_port=`expr $executorport + 1000 `
+JMX_REMOTE_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$jmxremote_port -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+
 echo "Starting AzkabanExecutorServer on port $executorport ..."
 serverpath=`pwd`
 
 if [ -z $AZKABAN_OPTS ]; then
   AZKABAN_OPTS="-Xmx3G"
 fi
-AZKABAN_OPTS="$AZKABAN_OPTS -server -Dcom.sun.management.jmxremote -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
+AZKABAN_OPTS="$AZKABAN_OPTS -server $JMX_REMOTE_OPTS -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
 
 java $AZKABAN_OPTS $JAVA_LIB_PATH -cp $CLASSPATH azkaban.execapp.AzkabanExecutorServer -conf $azkaban_dir/conf $@ &
 
