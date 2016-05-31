@@ -61,10 +61,6 @@ public class AzkabanExecutorServer {
   private static final Logger logger = Logger.getLogger(AzkabanExecutorServer.class);
   private static final int MAX_FORM_CONTENT_SIZE = 10 * 1024 * 1024;
 
-  private static final int MAX_HEADER_BUFFER_SIZE = 10 * 1024 * 1024;
-  private static final int MAX_RESPONSE_BUFFER_SIZE = 256 * 1024;
-  private static final int MAX_REQUEST_BUFFER_SIZE = 256 * 1024;
-
   public static final String AZKABAN_HOME = "AZKABAN_HOME";
   public static final String DEFAULT_CONF_PATH = "conf";
   public static final String AZKABAN_PROPERTIES_FILE = "azkaban.properties";

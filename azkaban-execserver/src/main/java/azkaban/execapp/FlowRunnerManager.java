@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +44,6 @@ import azkaban.execapp.event.FlowWatcher;
 import azkaban.execapp.event.LocalFlowWatcher;
 import azkaban.execapp.event.RemoteFlowWatcher;
 import azkaban.execapp.metric.NumFailedFlowMetric;
-import azkaban.execapp.metric.NumFailedJobMetric;
 import azkaban.executor.ExecutableFlow;
 import azkaban.executor.ExecutionOptions;
 import azkaban.executor.ExecutorLoader;
@@ -52,6 +52,8 @@ import azkaban.jobtype.JobTypeManager;
 import azkaban.jobtype.JobTypeManagerException;
 import azkaban.metric.MetricReportManager;
 import azkaban.project.ProjectLoader;
+import azkaban.project.ProjectWhitelist;
+import azkaban.project.ProjectWhitelist.WhitelistType;
 import azkaban.utils.FileIOUtils;
 import azkaban.utils.FileIOUtils.JobMetaData;
 import azkaban.utils.FileIOUtils.LogData;
@@ -142,6 +144,9 @@ public class FlowRunnerManager implements EventListener,
   private boolean validateProxyUser = false;
 
   private Object executionDirDeletionSync = new Object();
+
+  // date time of the the last flow submitted.
+  private long lastFlowSubmittedDate = 0;
 
   public FlowRunnerManager(Props props, ExecutorLoader executorLoader,
       ProjectLoader projectLoader, ClassLoader parentClassLoader)
@@ -255,6 +260,13 @@ public class FlowRunnerManager implements EventListener,
     return allProjects;
   }
 
+  public long getLastFlowSubmittedTime(){
+    // Note: this is not thread safe and may result in providing dirty data.
+    //       we will provide this data as is for now and will revisit if there
+    //       is a string justification for change.
+    return lastFlowSubmittedDate;
+  }
+
   public Props getGlobalProps() {
     return globalProps;
   }
@@ -316,6 +328,9 @@ public class FlowRunnerManager implements EventListener,
             wait(RECENTLY_FINISHED_TIME_TO_LIVE);
           } catch (InterruptedException e) {
             logger.info("Interrupted. Probably to shut down.");
+          } catch (Throwable t) {
+            logger.warn(
+                "Uncaught throwable, please look into why it is not caught", t);
           }
         }
       }
@@ -468,7 +483,9 @@ public class FlowRunnerManager implements EventListener,
         int numJobs =
             Integer.valueOf(options.getFlowParameters().get(
                 FLOW_NUM_JOB_THREADS));
-        if (numJobs > 0 && numJobs <= numJobThreads) {
+        if (numJobs > 0 && (numJobs <= numJobThreads || ProjectWhitelist
+                .isProjectWhitelisted(flow.getProjectId(),
+                    WhitelistType.NumJobPerFlow))) {
           numJobThreads = numJobs;
         }
       } catch (Exception e) {
@@ -505,6 +522,8 @@ public class FlowRunnerManager implements EventListener,
       Future<?> future = executorService.submit(runner);
       // keep track of this future
       submittedFlows.put(future, runner.getExecutionId());
+      // update the last submitted time.
+      this.lastFlowSubmittedDate = System.currentTimeMillis();
     } catch (RejectedExecutionException re) {
       throw new ExecutorManagerException(
           "Azkaban server can't execute any more flows. "
@@ -515,6 +534,7 @@ public class FlowRunnerManager implements EventListener,
 
   /**
    * Configure Azkaban metrics tracking for a new flowRunner instance
+   *
    * @param flowRunner
    */
   private void configureFlowLevelMetrics(FlowRunner flowRunner) {
@@ -522,10 +542,11 @@ public class FlowRunnerManager implements EventListener,
 
     if (MetricReportManager.isAvailable()) {
       MetricReportManager metricManager = MetricReportManager.getInstance();
-      //Adding NumFailedFlow Metric listener
+      // Adding NumFailedFlow Metric listener
       flowRunner.addListener((NumFailedFlowMetric) metricManager
           .getMetricFromName(NumFailedFlowMetric.NUM_FAILED_FLOW_METRIC_NAME));
     }
+
   }
 
   private void setupFlow(ExecutableFlow flow) throws ExecutorManagerException {

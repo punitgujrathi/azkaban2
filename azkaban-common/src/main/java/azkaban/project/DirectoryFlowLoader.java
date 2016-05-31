@@ -14,7 +14,7 @@
  * the License.
  */
 
-package azkaban.utils;
+package azkaban.project;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -36,16 +36,27 @@ import azkaban.flow.Flow;
 import azkaban.flow.FlowProps;
 import azkaban.flow.Node;
 import azkaban.flow.SpecialJobTypes;
+import azkaban.jobcallback.JobCallbackValidator;
 import azkaban.project.validator.ProjectValidator;
 import azkaban.project.validator.ValidationReport;
 import azkaban.project.validator.XmlValidatorManager;
+import azkaban.utils.Props;
+import azkaban.utils.PropsUtils;
+import azkaban.utils.Utils;
 
 public class DirectoryFlowLoader implements ProjectValidator {
   private static final DirFilter DIR_FILTER = new DirFilter();
   private static final String PROPERTY_SUFFIX = ".properties";
   private static final String JOB_SUFFIX = ".job";
+  public static final String JOB_MAX_XMS = "job.max.Xms";
+  public static final String MAX_XMS_DEFAULT = "1G";
+  public static final String JOB_MAX_XMX = "job.max.Xmx";
+  public static final String MAX_XMX_DEFAULT = "2G";
+  private static final String XMS = "Xms";
+  private static final String XMX = "Xmx";
 
   private final Logger logger;
+  private Props props;
   private HashSet<String> rootNodes;
   private HashMap<String, Flow> flowMap;
   private HashMap<String, Node> nodeMap;
@@ -60,27 +71,60 @@ public class DirectoryFlowLoader implements ProjectValidator {
   private Set<String> errors;
   private Set<String> duplicateJobs;
 
-  public DirectoryFlowLoader(Logger logger) {
+  /**
+   * Creates a new DirectoryFlowLoader.
+   *
+   * @param props Properties to add.
+   * @param logger The Logger to use.
+   */
+  public DirectoryFlowLoader(Props props, Logger logger) {
     this.logger = logger;
+    this.props = props;
   }
 
+  /**
+   * Returns the flow map constructed from the loaded flows.
+   *
+   * @return Map of flow name to Flow.
+   */
   public Map<String, Flow> getFlowMap() {
     return flowMap;
   }
 
+  /**
+   * Returns errors caught when loading flows.
+   *
+   * @return Set of error strings.
+   */
   public Set<String> getErrors() {
     return errors;
   }
 
+  /**
+   * Returns job properties.
+   *
+   * @return Map of job name to properties.
+   */
   public Map<String, Props> getJobProps() {
     return jobPropsMap;
   }
 
+  /**
+   * Returns list of properties.
+   *
+   * @return List of Props.
+   */
   public List<Props> getProps() {
     return propsList;
   }
 
-  public void loadProjectFlow(File baseDirectory) {
+  /**
+   * Loads all flows from the directory into the project.
+   *
+   * @param project The project to load flows to.
+   * @param baseDirectory The directory to load flows from.
+   */
+  public void loadProjectFlow(Project project, File baseDirectory) {
     propsList = new ArrayList<Props>();
     flowPropsList = new ArrayList<FlowProps>();
     jobPropsMap = new HashMap<String, Props>();
@@ -95,6 +139,8 @@ public class DirectoryFlowLoader implements ProjectValidator {
     // Load all the props files and create the Node objects
     loadProjectFromDir(baseDirectory.getPath(), baseDirectory, null);
 
+    jobPropertiesCheck(project);
+
     // Create edges and find missing dependencies
     resolveDependencies();
 
@@ -103,6 +149,7 @@ public class DirectoryFlowLoader implements ProjectValidator {
 
     // Resolve embedded flows
     resolveEmbeddedFlows();
+
   }
 
   private void loadProjectFromDir(String base, File dir, Props parent) {
@@ -366,6 +413,42 @@ public class DirectoryFlowLoader implements ProjectValidator {
     visited.remove(node.getId());
   }
 
+  private void jobPropertiesCheck(Project project) {
+    // if project is in the memory check whitelist, then we don't need to check
+    // its memory settings
+    if (ProjectWhitelist.isProjectWhitelisted(project.getId(),
+        ProjectWhitelist.WhitelistType.MemoryCheck)) {
+      return;
+    }
+
+    String maxXms = props.getString(JOB_MAX_XMS, MAX_XMS_DEFAULT);
+    String maxXmx = props.getString(JOB_MAX_XMX, MAX_XMX_DEFAULT);
+    long sizeMaxXms = Utils.parseMemString(maxXms);
+    long sizeMaxXmx = Utils.parseMemString(maxXmx);
+
+    for (String jobName : jobPropsMap.keySet()) {
+
+      Props jobProps = jobPropsMap.get(jobName);
+      String xms = jobProps.getString(XMS, null);
+      if (xms != null && !PropsUtils.isVarialbeReplacementPattern(xms)
+          && Utils.parseMemString(xms) > sizeMaxXms) {
+        errors.add(String.format(
+            "%s: Xms value has exceeded the allowed limit (max Xms = %s)",
+            jobName, maxXms));
+      }
+      String xmx = jobProps.getString(XMX, null);
+      if (xmx != null && !PropsUtils.isVarialbeReplacementPattern(xmx)
+          && Utils.parseMemString(xmx) > sizeMaxXmx) {
+        errors.add(String.format(
+            "%s: Xmx value has exceeded the allowed limit (max Xmx = %s)",
+            jobName, maxXmx));
+      }
+
+      // job callback properties check
+      JobCallbackValidator.validate(jobName, props, jobProps, errors);
+    }
+  }
+
   private String getNameWithoutExtension(File file) {
     String filename = file.getName();
     int index = filename.lastIndexOf('.');
@@ -411,8 +494,8 @@ public class DirectoryFlowLoader implements ProjectValidator {
   }
 
   @Override
-  public ValidationReport validateProject(File projectDir) {
-    loadProjectFlow(projectDir);
+  public ValidationReport validateProject(Project project, File projectDir) {
+    loadProjectFlow(project, projectDir);
     ValidationReport report = new ValidationReport();
     report.addErrorMsgs(errors);
     return report;

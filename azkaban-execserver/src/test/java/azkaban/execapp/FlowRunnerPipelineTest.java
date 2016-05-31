@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-
 import org.junit.Assert;
 import org.junit.After;
 import org.junit.Before;
@@ -44,11 +43,12 @@ import azkaban.executor.Status;
 import azkaban.flow.Flow;
 import azkaban.jobtype.JobTypeManager;
 import azkaban.jobtype.JobTypePluginSet;
+import azkaban.project.DirectoryFlowLoader;
 import azkaban.project.Project;
 import azkaban.project.ProjectLoader;
 import azkaban.project.ProjectManagerException;
 import azkaban.project.MockProjectLoader;
-import azkaban.utils.DirectoryFlowLoader;
+import azkaban.utils.Props;
 
 /**
  * Flows in this test:
@@ -102,7 +102,7 @@ public class FlowRunnerPipelineTest {
     project = new Project(1, "testProject");
 
     File dir = new File("unit/executions/embedded2");
-    prepareProject(dir);
+    prepareProject(project, dir);
 
     InteractiveTestJob.clearTestJobs();
   }
@@ -647,10 +647,10 @@ public class FlowRunnerPipelineTest {
     }
   }
 
-  private void prepareProject(File directory) throws ProjectManagerException,
+  private void prepareProject(Project project, File directory) throws ProjectManagerException,
       IOException {
-    DirectoryFlowLoader loader = new DirectoryFlowLoader(logger);
-    loader.loadProjectFlow(directory);
+    DirectoryFlowLoader loader = new DirectoryFlowLoader(new Props(), logger);
+    loader.loadProjectFlow(project, directory);
     if (!loader.getErrors().isEmpty()) {
       for (String error : loader.getErrors()) {
         System.out.println(error);

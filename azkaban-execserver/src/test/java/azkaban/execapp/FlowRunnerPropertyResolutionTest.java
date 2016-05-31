@@ -39,11 +39,11 @@ import azkaban.executor.JavaJob;
 import azkaban.executor.MockExecutorLoader;
 import azkaban.flow.Flow;
 import azkaban.jobtype.JobTypeManager;
+import azkaban.project.DirectoryFlowLoader;
 import azkaban.project.Project;
 import azkaban.project.ProjectLoader;
 import azkaban.project.ProjectManagerException;
 import azkaban.project.MockProjectLoader;
-import azkaban.utils.DirectoryFlowLoader;
 import azkaban.utils.Props;
 
 /**
@@ -95,7 +95,7 @@ public class FlowRunnerPropertyResolutionTest {
     project = new Project(1, "testProject");
 
     File dir = new File("unit/executions/execpropstest");
-    prepareProject(dir);
+    prepareProject(project, dir);
 
     InteractiveTestJob.clearTestJobs();
   }
@@ -207,10 +207,10 @@ public class FlowRunnerPropertyResolutionTest {
     Assert.assertEquals("moo4", job3Props.get("props4"));
   }
 
-  private void prepareProject(File directory) throws ProjectManagerException,
+  private void prepareProject(Project project, File directory) throws ProjectManagerException,
       IOException {
-    DirectoryFlowLoader loader = new DirectoryFlowLoader(logger);
-    loader.loadProjectFlow(directory);
+    DirectoryFlowLoader loader = new DirectoryFlowLoader(new Props(), logger);
+    loader.loadProjectFlow(project, directory);
     if (!loader.getErrors().isEmpty()) {
       for (String error : loader.getErrors()) {
         System.out.println(error);
