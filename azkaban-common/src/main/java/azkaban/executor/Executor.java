@@ -59,14 +59,14 @@ public class Executor implements Comparable<Executor> {
   }
 
   /**
-   * constructs an executor object with a group
+   * constructs an executor object with a groupName
    * @param id
    * @param host
    * @param port
    * @param isActive
-   * @param tag
+   * @param group
    */
-  public Executor(int id, String host, int port, boolean isActive,String tag) {
+  public Executor(int id, String host, int port, boolean isActive,String group) {
     if (!Utils.isValidPort(port)) {
       throw new IllegalArgumentException(String.format(
               "Invalid port number %d for host %s, executor_id %d", port, host, id));
@@ -76,7 +76,7 @@ public class Executor implements Comparable<Executor> {
     this.host = host;
     this.port = port;
     this.isActive = isActive;
-    this.group = tag;
+    this.group = group;
   }
 
 
