@@ -48,18 +48,28 @@ public interface ExecutorLoader {
       String flowContains, String userNameContains, int status, long startData,
       long endData, int skip, int num) throws ExecutorManagerException;
 
-  /**
-   * <pre>
-   * Fetch all executors from executors table
-   * Note:-
-   * 1 throws an Exception in case of a SQL issue
-   * 2 returns an empty list in case of no executor
-   * </pre>
-   *
-   * @return List<Executor>
-   * @throws ExecutorManagerException
-   */
-  public List<Executor> fetchAllExecutors() throws ExecutorManagerException;
+    /**
+     * <pre>
+     * Fetch all executors from executors table
+     * Note:-
+     * 1 throws an Exception in case of a SQL issue
+     * 2 returns an empty list in case of no executor
+     * </pre>
+     *
+     * @return List<Executor>
+     * @throws ExecutorManagerException
+     */
+    public List<Executor> fetchAllExecutors() throws ExecutorManagerException;
+
+
+    /**
+    * Fetch all distinct executorGroups for executors table
+    * Returns an empty list if no group is specified
+    *
+    * @return
+    * @throws ExecutorManagerException
+    */
+    public List<String> fetchDistinctExecutorGroups() throws ExecutorManagerException;
 
   /**
    * <pre>

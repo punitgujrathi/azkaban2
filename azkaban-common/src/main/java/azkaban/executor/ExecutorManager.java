@@ -16,32 +16,6 @@
 
 package azkaban.executor;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.Thread.State;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-
 import azkaban.alert.Alerter;
 import azkaban.event.Event;
 import azkaban.event.Event.Type;
@@ -57,6 +31,16 @@ import azkaban.utils.FileIOUtils.LogData;
 import azkaban.utils.JSONUtils;
 import azkaban.utils.Pair;
 import azkaban.utils.Props;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.Thread.State;
+import java.net.URI;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Executor manager used to manage the client side job.
@@ -1020,6 +1004,11 @@ public class ExecutorManager extends EventHandler implements
             ProjectWhitelist.WhitelistType.MemoryCheck);
         options.setMemoryCheck(memoryCheck);
 
+        //Validating the executor group name provided by user
+        if(isMultiExecutorMode()) {
+          validateExecutorGroup(exflow);
+        }
+
         // The exflow id is set by the loader. So it's unavailable until after
         // this call.
         executorLoader.uploadExecutableFlow(exflow);
@@ -1050,6 +1039,25 @@ public class ExecutorManager extends EventHandler implements
             + exflow.getExecutionId();
       }
       return message;
+    }
+  }
+
+  /**
+   * Helper method to validate the executor group name provided by user
+   * @param exflow
+   * @throws ExecutorManagerException
+   */
+  private void validateExecutorGroup(ExecutableFlow exflow) throws ExecutorManagerException {
+    List<String> activeGroups = executorLoader.fetchDistinctExecutorGroups();
+    String groupName = exflow.getExecutionOptions().getExecutorGroup();
+    boolean isValidGroup = true;
+
+    if (groupName != null && !activeGroups.contains(groupName)) {
+      isValidGroup = false;
+    }
+    if(!isValidGroup) {
+      throw new ExecutorManagerException(String.format("Executor group name [%s] is not valid",
+              exflow.getExecutionOptions().getExecutorGroup()));
     }
   }
 
@@ -1170,7 +1178,7 @@ public class ExecutorManager extends EventHandler implements
    *
    * @throws ExecutorManagerException
    *
-   * @see azkaban.executor.ExecutorManagerAdapter#callExecutorStats(java.lang.String,
+   * @see azkaban.executor.ExecutorManagerAdapter#(java.lang.String,
    *      azkaban.utils.Pair[])
    */
   @Override
@@ -1938,7 +1946,11 @@ public class ExecutorManager extends EventHandler implements
       Executor choosenExecutor =
         getUserSpecifiedExecutor(exflow.getExecutionOptions(),
           exflow.getExecutionId());
-
+//      if (exflow.getExecutionOptions().getExecutorGroup() != null) {
+//        availableExecutors = FluentIterable.from(availableExecutors)
+//                .filter(executor -> exflow.getExecutionOptions().getExecutorGroup().equals(executor.getGroup()))
+//                .toImmutableSet();
+//      }
       // If no executor was specified by admin
       if (choosenExecutor == null) {
         logger.info("Using dispatcher for execution id :"
