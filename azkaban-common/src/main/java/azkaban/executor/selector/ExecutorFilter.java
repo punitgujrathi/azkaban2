@@ -175,27 +175,38 @@ public final class ExecutorFilter extends CandidateFilter<Executor, ExecutableFl
   }
 
 
-  private static FactorFilter<Executor, ExecutableFlow> getExecutorGroupFilter(){
+  private static FactorFilter<Executor, ExecutableFlow> getExecutorGroupFilter() {
     return FactorFilter.create(EXECUTOR_GROUPING_FILTER_NAME, new FactorFilter.Filter<Executor, ExecutableFlow>() {
       @Override
       public boolean filterTarget(Executor filteringTarget, ExecutableFlow referencingObject) {
-        if (null == filteringTarget){
+        if (null == filteringTarget) {
           logger.debug(String.format("%s : filtering out the target as it is null.", EXECUTOR_GROUPING_FILTER_NAME));
           return false;
         }
         String group = filteringTarget.getGroup();
-        if ( group == null) {
-          logger.debug(String.format("%s : filtering out %s as it's group is not specified.",
+        if (group == null) {
+          logger.debug(String.format("%s : Not filtering out %s as it's group is not specified. Falling back " +
+                          "to old selection",
                   EXECUTOR_GROUPING_FILTER_NAME,
                   filteringTarget.toString()));
-          return false;
+          return true;
         }
-        if(referencingObject.getExecutionOptions().getExecutorGroup() == null) {
+
+        if (referencingObject.getExecutionOptions() == null) {
+          logger.debug(String.format("%s : filtering not required for  %s as user hasn't specified any " +
+                          "execution options",
+                  EXECUTOR_GROUPING_FILTER_NAME,
+                  filteringTarget.toString()));
+        }
+        if (referencingObject.getExecutionOptions() != null &&
+                referencingObject.getExecutionOptions().getExecutorGroup() == null) {
           logger.debug(String.format("%s : filtering not required for  %s as user hasn't specified any group",
                   EXECUTOR_GROUPING_FILTER_NAME,
                   filteringTarget.toString()));
           return true;
         }
+
+        // Actual filtering based on equality of groupName specified by user and group accessed
         return group != referencingObject.getExecutionOptions().getExecutorGroup();
       }
     });
