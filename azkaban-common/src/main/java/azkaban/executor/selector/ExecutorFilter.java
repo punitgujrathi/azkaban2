@@ -197,6 +197,7 @@ public final class ExecutorFilter extends CandidateFilter<Executor, ExecutableFl
                           "execution options",
                   EXECUTOR_GROUPING_FILTER_NAME,
                   filteringTarget.toString()));
+          return true;
         }
         if (referencingObject.getExecutionOptions() != null &&
                 referencingObject.getExecutionOptions().getExecutorGroup() == null) {
@@ -206,8 +207,8 @@ public final class ExecutorFilter extends CandidateFilter<Executor, ExecutableFl
           return true;
         }
 
-        // Actual filtering based on equality of groupName specified by user and group accessed
-        return group != referencingObject.getExecutionOptions().getExecutorGroup();
+        // Actual filtering based on equality of groupName specified by user and group accessed from db
+        return group.equals(referencingObject.getExecutionOptions().getExecutorGroup());
       }
     });
   }
