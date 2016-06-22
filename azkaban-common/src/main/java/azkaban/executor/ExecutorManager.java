@@ -1056,10 +1056,12 @@ public class ExecutorManager extends EventHandler implements
       isValidGroup = false;
     }
     if(!isValidGroup) {
-      throw new ExecutorManagerException(String.format("Executor group name [%s] is not valid",
-              exflow.getExecutionOptions().getExecutorGroup()));
+      throw new ExecutorManagerException(String.format("Executor group name [%s] is not valid\n Following are the valid " +
+                      "executor groups %s",
+              exflow.getExecutionOptions().getExecutorGroup(),activeGroups.toString()));
     }
   }
+
 
   private void cleanOldExecutionLogs(long millis) {
     try {
