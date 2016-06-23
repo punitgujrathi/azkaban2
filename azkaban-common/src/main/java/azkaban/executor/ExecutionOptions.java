@@ -216,6 +216,7 @@ public class ExecutionOptions {
     flowOptionObj.put(SUCCESS_EMAILS_OVERRIDE, successEmailsOverride);
     flowOptionObj.put(MAIL_CREATOR, mailCreator);
     flowOptionObj.put(MEMORY_CHECK, memoryCheck);
+    flowOptionObj.put(EXECUTOR_GROUP,executorGroup);
     return flowOptionObj;
   }
 
@@ -273,6 +274,7 @@ public class ExecutionOptions {
         false));
 
     options.setMemoryCheck(wrapper.getBool(MEMORY_CHECK, true));
+    options.setExecutorGroup(wrapper.getString(EXECUTOR_GROUP,null));
 
     return options;
   }
