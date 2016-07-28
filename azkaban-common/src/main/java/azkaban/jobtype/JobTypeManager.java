@@ -108,7 +108,7 @@ public class JobTypeManager {
 
     if (!jobPluginsDir.exists()) {
       logger.error("Job type plugin dir " + jobTypePluginDir
-          + " doesn't exist. Will not load any external plugins.");
+              + " doesn't exist. Will not load any external plugins.");
       return;
     } else if (!jobPluginsDir.isDirectory()) {
       throw new JobTypeManagerException("Job type plugin dir "
@@ -358,8 +358,11 @@ public class JobTypeManager {
         // pluginSet.getCommonPluginLoadProps() will return null if there is no plugins directory.
         // hence assigning default Props() if that's the case
         pluginLoadProps = pluginSet.getCommonPluginLoadProps();
-        if(pluginJobProps == null)
-          pluginJobProps = new Props();
+
+        if(pluginLoadProps == null) {
+          logger.info("Loading plugin default job types");
+          pluginLoadProps = new Props();
+        }
       }
 
       job =

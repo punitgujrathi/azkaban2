@@ -18,8 +18,10 @@ package azkaban.execapp;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
 
+import azkaban.flow.CommonJobProperties;
+import azkaban.utils.Props;
 import org.apache.commons.io.FileUtils;
 
 import org.junit.After;
@@ -45,6 +47,8 @@ import azkaban.project.Project;
 import azkaban.project.ProjectLoader;
 import azkaban.project.MockProjectLoader;
 import azkaban.utils.JSONUtils;
+
+import static org.hamcrest.CoreMatchers.*;
 
 public class FlowRunnerTest {
   private File workingDir;
@@ -486,4 +490,79 @@ public class FlowRunnerTest {
 
     return runner;
   }
+
+  /* orderNodesByPriorityHelperTest: empty list case */
+  @Ignore @Test
+  public void orderNodesByPriorityHelperTestEmptySet() throws Exception {
+    FlowRunner runner = getMockFlowrunner();
+    Collection<ExecutableNode> nodes =
+            runner.orderNodesByPriorityHelper(new HashSet<ExecutableNode>());
+    Assert.assertEquals(0, nodes.size());
+  }
+
+  /* orderNodesByPriorityHelperTest: all nodes at same priority */
+  @Ignore @Test
+  public void orderNodesByPriorityHelperSamePriority() throws Exception {
+    FlowRunner runner = getMockFlowrunner();
+    Set<ExecutableNode> unorderedNodes = new HashSet<ExecutableNode>();
+    ExecutableNode nodeA = getDummyExecutableNode("node-A", 1);
+    ExecutableNode nodeB = getDummyExecutableNode("node-B", 1);
+    ExecutableNode nodeC = getDummyExecutableNode("node-C", 1);
+
+    unorderedNodes.add(nodeC);
+    unorderedNodes.add(nodeA);
+    unorderedNodes.add(nodeB);
+
+    Collection<ExecutableNode> nodes =
+            runner.orderNodesByPriorityHelper(unorderedNodes);
+
+    // lexicographically ordered
+    Assert.assertThat(Arrays.asList(nodeA, nodeB, nodeC), is(nodes));
+  }
+
+  /* orderNodesByPriorityHelperTest: all nodes at user defined priority */
+  @Ignore @Test
+  public void orderNodesByPriorityHelperUserDefinedPriority() throws Exception {
+    FlowRunner runner = getMockFlowrunner();
+    Set<ExecutableNode> unorderedNodes = new HashSet<ExecutableNode>();
+    ExecutableNode nodeA = getDummyExecutableNode("node-A", 0);
+    ExecutableNode nodeB = getDummyExecutableNode("node-B", 3);
+    ExecutableNode nodeC = getDummyExecutableNode("node-C", 0);
+
+    unorderedNodes.add(nodeC);
+    unorderedNodes.add(nodeA);
+    unorderedNodes.add(nodeB);
+
+    Collection<ExecutableNode> nodes =
+            runner.orderNodesByPriorityHelper(unorderedNodes);
+
+    // B ordered by priortiy while (A,C) lexicographically ordered
+    Assert.assertThat(Arrays.asList(nodeB, nodeA, nodeC), is(nodes));
+  }
+
+  /**
+   * Get a dummy node to be for unit tests
+   * @param nodeId
+   * @param priority
+   * @return
+   */
+  private ExecutableNode getDummyExecutableNode(String nodeId, int priority) {
+    ExecutableNode node = new ExecutableNode();
+    node.setId(nodeId);
+    if(priority != 0) {
+      Props props = new Props();
+      props.put(CommonJobProperties.JOB_PRIORITY, priority);
+      node.setInputProps(props);
+    }
+    return node;
+  }
+
+  private FlowRunner getMockFlowrunner() throws Exception {
+    MockExecutorLoader loader = new MockExecutorLoader();
+    EventCollectorListener eventCollector = new EventCollectorListener();
+    eventCollector.setEventFilterOut(Event.Type.JOB_FINISHED,
+            Event.Type.JOB_STARTED, Event.Type.JOB_STATUS_CHANGED);
+    return createFlowRunner(loader, eventCollector, "exec1");
+  }
+
 }
