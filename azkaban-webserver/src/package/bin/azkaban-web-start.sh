@@ -42,11 +42,13 @@ jmxremote_port=`expr $executorport + 2000 `
 
 JMX_REMOTE_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$jmxremote_port -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 
-
+LOG_DIR="/var/log/flipkart/fk-bigfoot-azkaban"
+GC_LOGGING_OPTIONS=" -XX:+PrintGCApplicationStoppedTime -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"
+start_time=`date "+%Y%m%d_%H_%M_%S"`
 serverpath=`pwd`
 
 if [ -z $AZKABAN_OPTS ]; then
-  AZKABAN_OPTS="-Xmx10G"
+  AZKABAN_OPTS="-Xmx10G $GC_LOGGING_OPTIONS -Xloggc:$LOG_DIR/gc.log.$start_time"
 fi
 AZKABAN_OPTS="$AZKABAN_OPTS -server $JMX_REMOTE_OPTS -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
 
