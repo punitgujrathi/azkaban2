@@ -46,7 +46,7 @@ JMX_REMOTE_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.p
 serverpath=`pwd`
 
 if [ -z $AZKABAN_OPTS ]; then
-  AZKABAN_OPTS="-Xmx4G"
+  AZKABAN_OPTS="-Xmx10G"
 fi
 AZKABAN_OPTS="$AZKABAN_OPTS -server $JMX_REMOTE_OPTS -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
 
