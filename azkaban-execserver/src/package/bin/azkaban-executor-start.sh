@@ -49,7 +49,7 @@ echo "Starting AzkabanExecutorServer on port $executorport ..."
 serverpath=`pwd`
 
 if [ -z $AZKABAN_OPTS ]; then
-  AZKABAN_OPTS="-Xmx3G $GC_LOGGING_OPTIONS -Xloggc:$LOG_DIR/gc.log.$start_time"
+  AZKABAN_OPTS="-Xmx3G $GC_LOGGING_OPTIONS -Xloggc:$LOG_DIR/gc_executorserver.log.$start_time"
 fi
 AZKABAN_OPTS="$AZKABAN_OPTS -server $JMX_REMOTE_OPTS -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
 
