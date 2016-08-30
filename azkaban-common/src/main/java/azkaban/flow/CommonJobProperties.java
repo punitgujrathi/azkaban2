@@ -38,6 +38,11 @@ public class CommonJobProperties {
   public static final String DEPENDENCIES = "dependencies";
 
   /**
+   * Integer value to prioritize ready jobs. Higher value means higher priority
+   */
+  public static final String JOB_PRIORITY = "job.priority";
+
+  /**
    * The number of retries when this job has failed.
    */
   public static final String RETRIES = "retries";
