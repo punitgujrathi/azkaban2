@@ -337,6 +337,29 @@ project(':azkaban-execserver') {
     }
   }
 
+  apply plugin: 'c'
+  model {
+    components {
+      process_util(NativeLibrarySpec) {
+        binaries.all{
+
+          if (toolChain in Gcc) {
+            cCompiler.args "-fPIC", "--shared"
+          }
+        }
+        sources {
+          c {
+            source {
+              srcDir "src/main"
+              include "**/*.c"
+            }
+          }
+        }
+      }
+    }
+
+  }
+
   dependencies {
     compile(project(':azkaban-common'))
     compile('commons-io:commons-io:2.4')
