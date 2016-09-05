@@ -53,6 +53,9 @@ if [ -z $AZKABAN_OPTS ]; then
 fi
 AZKABAN_OPTS="$AZKABAN_OPTS -server $JMX_REMOTE_OPTS -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
 
+PROCESS_UTIL_LIB=`ls $azkaban_dir/extlib/libprocess_util.* | xargs readlink -e`
+export LD_PRELOAD=PROCESS_UTIL_LIB
+
 java $AZKABAN_OPTS $JAVA_LIB_PATH -cp $CLASSPATH azkaban.execapp.AzkabanExecutorServer -conf $azkaban_dir/conf $@ &
 
 echo $! > $azkaban_dir/currentpid

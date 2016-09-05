@@ -360,6 +360,13 @@ project(':azkaban-execserver') {
 
   }
 
+
+  task copyCLib(type: Copy, dependsOn: 'process_utilSharedLibrary') {
+
+    from('build/binaries/process_utilSharedLibrary/')
+    into('build/package/extlib')
+  }
+
   dependencies {
     compile(project(':azkaban-common'))
     compile('commons-io:commons-io:2.4')
@@ -405,7 +412,8 @@ project(':azkaban-execserver') {
       'createDirs',
       'copyDeps',
       'copyLibs',
-      'copyPackage']) {
+      'copyPackage',
+      'copyCLib']) {
   }
 }
 
