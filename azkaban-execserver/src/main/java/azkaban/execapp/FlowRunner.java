@@ -497,48 +497,28 @@ public class FlowRunner extends EventHandler implements Runnable {
   }
 
   /**
-   * Uses orderNodesByPriorityHelper to order nodes
+   * Helper method which sorts all the input nodes and returns nodes sorted by
+   * {@link CommonJobProperties#JOB_PRIORITY}
+   *
    * @param nodesToCheck
    * @return
    * @throws IOException
    */
   private Collection<ExecutableNode> orderNodesByPriority(Collection<ExecutableNode> nodesToCheck)
-      throws IOException {
-    Collection<ExecutableNode> orderedNodes = nodesToCheck;
-    if (flow.getInputProps() != null) {
-      orderedNodes = orderNodesByPriorityHelper(orderedNodes);
-    }
-    return orderedNodes;
-  }
-
-  /**
-   * Sorts all nodes by CommonJobProperties.PRIORITY
-   * @param nodes
-   * @return
-   * @throws IOException
-   */
-  protected List<ExecutableNode> orderNodesByPriorityHelper(Collection<ExecutableNode> nodes)
-      throws IOException {
+          throws IOException {
     List<ExecutableNode> prioritizedNodes = new ArrayList<ExecutableNode>();
-    if (nodes != null && nodes.size() > 0) {
-      // select ready nodes
-      for (ExecutableNode node : nodes) {
-        if (getImpliedStatus(node) == Status.READY) {
-          prepareJobProperties(node);
-          prioritizedNodes.add(node);
-        }
+    if (nodesToCheck != null && nodesToCheck.size() > 0) {
+      for (ExecutableNode node : nodesToCheck) {
+        prepareJobProperties(node);
+        prioritizedNodes.add(node);
       }
 
-      // sort nodes in descending order by CommonJobProperties.PRIORITY
       Collections.sort(prioritizedNodes, new Comparator<ExecutableNode>() {
         public int compare(ExecutableNode firstNode, ExecutableNode secondNode) {
           int firstJobPriority = firstNode.getInputProps().
                   getInt(CommonJobProperties.JOB_PRIORITY, 0);
           int secondJobPriority = secondNode.getInputProps().
                   getInt(CommonJobProperties.JOB_PRIORITY, 0);
-          if (secondJobPriority == firstJobPriority) {
-            return firstNode.getNestedId().compareTo(secondNode.getNestedId());
-          }
           return (secondJobPriority - firstJobPriority);
         }
       });
