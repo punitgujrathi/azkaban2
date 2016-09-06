@@ -16,6 +16,7 @@
 
 package azkaban.executor.priority;
 
+import azkaban.executor.ExecutableNode;
 
 import java.util.Comparator;
 import java.util.concurrent.*;
@@ -32,39 +33,23 @@ public class PriorityThreadExecutorPool extends ThreadPoolExecutor implements Pr
   public PriorityThreadExecutorPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
                                     ThreadFactory threadFactory, RejectedExecutionHandler handler) {
     super(corePoolSize, maximumPoolSize, keepAliveTime, unit,
-            new PriorityBlockingQueue<Runnable>(corePoolSize, new PriorityFutureTaskComparator()), threadFactory, handler);
+            new PriorityBlockingQueue<Runnable>(corePoolSize,
+                    new PriorityFutureTaskComparator()), threadFactory, handler);
   }
 
-  public Future<?> submit(Runnable task, int priority) {
-    RunnableFuture<Object> pTask = newPriorityTaskFor(task, null, priority);
+  public Future<?> submit(Runnable task, ExecutableNode node) {
+    RunnableFuture<Object> pTask = newPriorityTaskFor(task, node);
     execute(pTask);
     return pTask;
   }
 
-  public <T> Future<T> submit(Runnable task, T result, int priority) {
-    RunnableFuture<T> pTask = newPriorityTaskFor(task, result, priority);
-    execute(pTask);
-    return pTask;
+  protected RunnableFuture newPriorityTaskFor(Runnable runnable, ExecutableNode node) {
+    return new PriorityFutureTask(runnable, node);
   }
 
-  public <T> Future<T> submit(Callable<T> task, int priority) {
-    RunnableFuture<T> pTask = newPriorityTaskFor(task, priority);
-    execute(pTask);
-    return pTask;
-  }
-
-  protected <T> RunnableFuture<T> newPriorityTaskFor(Runnable runnable, T value, int priority) {
-    return new PriorityFutureTask<T>(runnable, value, priority);
-  }
-
-  protected <T> RunnableFuture<T> newPriorityTaskFor(Callable<T> callable, int priority) {
-    return new PriorityFutureTask<T>(callable, priority);
-  }
-
-  @SuppressWarnings("rawtypes")
   private static class PriorityFutureTaskComparator<T extends PriorityFutureTask> implements Comparator<T> {
     public int compare(T t1, T t2) {
-      return t2.getPriority() - t1.getPriority();
+      return t1.compareTo(t2);
     }
   }
 }

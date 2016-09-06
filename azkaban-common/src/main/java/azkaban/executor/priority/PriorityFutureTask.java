@@ -16,36 +16,38 @@
 
 package azkaban.executor.priority;
 
-import java.util.concurrent.Callable;
+import azkaban.executor.ExecutableNode;
+import azkaban.flow.CommonJobProperties;
+
 import java.util.concurrent.FutureTask;
 
 /**
  * Attaches Priorities with each {@link FutureTask}
- * @param <T>
  */
-public class PriorityFutureTask<T> extends FutureTask<T> {
-  private int priority;
+public class PriorityFutureTask extends FutureTask implements Comparable<PriorityFutureTask> {
+  private ExecutableNode node;
 
-  public PriorityFutureTask(Callable<T> callable, int priority) {
-    super(callable);
-    this.priority = priority;
-  }
-
-  public PriorityFutureTask(Runnable runnable, T result, int priority) {
-    super(runnable, result);
-    this.priority = priority;
-  }
-
-  public int getPriority() {
-    return this.priority;
-  }
-
-  public void setPriority(int priority) {
-    this.priority = priority;
+  public PriorityFutureTask(Runnable runnable, ExecutableNode node) {
+    super(runnable, null);
+    this.node = node;
   }
 
   @Override
   public void run() {
     super.run();
+  }
+
+  @Override
+  public int compareTo(PriorityFutureTask that) {
+    ExecutableNode firstExecutableNode = this.node;
+    ExecutableNode secondExecutableNode = that.node;
+    int firstJobPriority = firstExecutableNode.getInputProps().
+            getInt(CommonJobProperties.JOB_PRIORITY, 0);
+    int secondJobPriority = secondExecutableNode.getInputProps().
+            getInt(CommonJobProperties.JOB_PRIORITY, 0);
+    if (firstJobPriority == secondJobPriority)  {
+      return firstExecutableNode.getNestedId().compareTo(secondExecutableNode.getNestedId());
+    }
+    return (secondJobPriority - firstJobPriority);
   }
 }

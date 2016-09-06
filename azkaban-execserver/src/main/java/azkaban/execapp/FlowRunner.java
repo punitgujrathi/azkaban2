@@ -16,30 +16,6 @@
 
 package azkaban.execapp;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.RejectedExecutionException;
-
-import azkaban.executor.*;
-import azkaban.executor.priority.PriorityExecutor;
-import azkaban.executor.priority.PriorityExecutorService;
-import org.apache.log4j.Appender;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-
 import azkaban.event.Event;
 import azkaban.event.Event.Type;
 import azkaban.event.EventHandler;
@@ -49,7 +25,10 @@ import azkaban.execapp.event.JobCallbackManager;
 import azkaban.execapp.jmx.JmxJobMBeanManager;
 import azkaban.execapp.metric.NumFailedJobMetric;
 import azkaban.execapp.metric.NumRunningJobMetric;
+import azkaban.executor.*;
 import azkaban.executor.ExecutionOptions.FailureAction;
+import azkaban.executor.priority.PriorityExecutor;
+import azkaban.executor.priority.PriorityExecutorService;
 import azkaban.flow.CommonJobProperties;
 import azkaban.flow.FlowProps;
 import azkaban.jobExecutor.ProcessJob;
@@ -60,6 +39,13 @@ import azkaban.project.ProjectManagerException;
 import azkaban.utils.Props;
 import azkaban.utils.PropsUtils;
 import azkaban.utils.SwapQueue;
+import org.apache.log4j.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Class that handles the running of a ExecutableFlow DAG
@@ -519,6 +505,9 @@ public class FlowRunner extends EventHandler implements Runnable {
                   getInt(CommonJobProperties.JOB_PRIORITY, 0);
           int secondJobPriority = secondNode.getInputProps().
                   getInt(CommonJobProperties.JOB_PRIORITY, 0);
+          if (firstJobPriority == secondJobPriority) {
+            return firstNode.getNestedId().compareTo(secondNode.getNestedId());
+          }
           return (secondJobPriority - firstJobPriority);
         }
       });
@@ -767,7 +756,7 @@ public class FlowRunner extends EventHandler implements Runnable {
     logger.info("Submitting job '" + node.getNestedId() + "' with priority '" + priority + "' to run.");
 
     try {
-      executorService.submit(runner, priority);
+      executorService.submit(runner, node);
       activeJobRunners.add(runner);
     } catch (RejectedExecutionException e) {
       logger.error(e);

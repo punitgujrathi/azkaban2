@@ -3,6 +3,7 @@ CREATE TABLE executors (
   host VARCHAR(64) NOT NULL,
   port INT NOT NULL,
   active BOOLEAN DEFAULT true,
+  `group` varchar(64) DEFAULT NULL,
   UNIQUE (host, port),
   UNIQUE INDEX executor_id (id)
 );

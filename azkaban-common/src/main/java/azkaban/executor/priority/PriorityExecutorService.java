@@ -16,7 +16,8 @@
 
 package azkaban.executor.priority;
 
-import java.util.concurrent.Callable;
+import azkaban.executor.ExecutableNode;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -24,9 +25,5 @@ import java.util.concurrent.Future;
  * ExecutorService which has a notion of prioritised execution
  */
 public interface PriorityExecutorService extends ExecutorService {
-  Future<?> submit(Runnable task, int priority);
-
-  <T> Future<T> submit(Runnable task, T result, int priority);
-
-  <T> Future<T> submit(Callable<T> task, int priority);
+  Future<?> submit(Runnable task, ExecutableNode executableNode);
 }

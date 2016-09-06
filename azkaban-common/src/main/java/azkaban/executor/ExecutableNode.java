@@ -16,19 +16,12 @@
 
 package azkaban.executor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import azkaban.flow.Node;
 import azkaban.utils.Props;
 import azkaban.utils.PropsUtils;
 import azkaban.utils.TypedMapWrapper;
+
+import java.util.*;
 
 /**
  * Base Executable that nodes and flows are based.
