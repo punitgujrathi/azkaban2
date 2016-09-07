@@ -40,10 +40,12 @@ echo $CLASSPATH;
 executorport=`cat $azkaban_dir/conf/azkaban.properties | grep executor.port | cut -d = -f 2`
 serverpath=`pwd`
 
+LOG_DIR="/var/log/flipkart/fk-bigfoot-azkaban"
+
 if [ -z $AZKABAN_OPTS ]; then
   AZKABAN_OPTS=-Xmx3G
 fi
-AZKABAN_OPTS="$AZKABAN_OPTS -server -Dcom.sun.management.jmxremote -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
+AZKABAN_OPTS="$AZKABAN_OPTS -server -Dcom.sun.management.jmxremote -Djava.io.tmpdir=$tmpdir -Dlogfile.path=$LOG_DIR -Dexecutorport=$executorport -Dserverpath=$serverpath"
 
 java $AZKABAN_OPTS -cp $CLASSPATH azkaban.soloserver.AzkabanSingleServer -conf $azkaban_dir/conf $@ &
 
