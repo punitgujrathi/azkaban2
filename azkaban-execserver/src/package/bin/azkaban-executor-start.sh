@@ -42,7 +42,11 @@ jmxremote_port=`expr $executorport + 1000 `
 JMX_REMOTE_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$jmxremote_port -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 
 LOG_DIR="/var/log/flipkart/fk-bigfoot-azkaban"
-GC_LOGGING_OPTIONS=" -XX:+PrintGCApplicationStoppedTime -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"
+
+GC_LOGGING_OPTIONS=" -XX:+PrintGCApplicationStoppedTime -XX:+PrintGC -XX:+PrintGCDateStamps \
+                     -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=15 \
+                     -XX:GCLogFileSize=128K"
+
 start_time=`date "+%Y%m%d_%H_%M_%S"`
 
 echo "Starting AzkabanExecutorServer on port $executorport ..."
