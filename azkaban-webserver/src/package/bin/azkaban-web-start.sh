@@ -52,7 +52,7 @@ start_time=`date "+%Y%m%d_%H_%M_%S"`
 serverpath=`pwd`
 
 if [ -z $AZKABAN_OPTS ]; then
-  AZKABAN_OPTS="-Xmx10G $GC_LOGGING_OPTIONS -Xloggc:$LOG_DIR/gc_webserver.log.$start_time"
+  AZKABAN_OPTS="-Xmx10G $GC_LOGGING_OPTIONS -Dlogfile.name=$LOG_DIR -Xloggc:$LOG_DIR/gc_webserver.log.$start_time"
 fi
 AZKABAN_OPTS="$AZKABAN_OPTS -server $JMX_REMOTE_OPTS -Djava.io.tmpdir=$tmpdir -Dexecutorport=$executorport -Dserverpath=$serverpath"
 
