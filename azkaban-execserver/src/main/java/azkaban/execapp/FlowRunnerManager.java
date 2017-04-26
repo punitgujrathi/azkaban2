@@ -22,6 +22,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import azkaban.executor.Status;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
@@ -282,11 +284,16 @@ public class FlowRunnerManager implements EventListener,
     private static final long OLD_PROJECT_DIR_INTERVAL_MS = 5 * 60 * 1000;
     // Every 2 mins clean the recently finished list
     private static final long RECENTLY_FINISHED_INTERVAL_MS = 2 * 60 * 1000;
+    // Every 5 mins kill flows running longer than allowed max running time
+    private static final long LONG_RUNNING_FLOW_KILLING_INTERVAL_MS = 5 * 60 * 1000;
 
     private boolean shutdown = false;
     private long lastExecutionDirCleanTime = -1;
     private long lastOldProjectCleanTime = -1;
     private long lastRecentlyFinishedCleanTime = -1;
+    private long lastLongRunningFlowCleanTime = -1;
+    //default value is 5 days
+    private final long flowMaxRunningTimeInMins = azkabanProps.getInt(AzkabanExecutorServer.AZKABAN_MAX_FLOW_RUNNING_MINS, 60 * 24 * 5);
 
     public CleanerThread() {
       this.setName("FlowRunnerManager-Cleaner-Thread");
@@ -325,6 +332,17 @@ public class FlowRunnerManager implements EventListener,
               lastExecutionDirCleanTime = currentTime;
             }
 
+            if (flowMaxRunningTimeInMins > 0 && currentTime - LONG_RUNNING_FLOW_KILLING_INTERVAL_MS > lastLongRunningFlowCleanTime) {
+              logger.info(String.format("Killing long jobs running longer than %s mins", flowMaxRunningTimeInMins));
+              for (FlowRunner flowRunner : runningFlows.values()) {
+                if (isFlowRunningLongerThan(flowRunner.getExecutableFlow(), flowMaxRunningTimeInMins)) {
+                  logger.info(String.format("Killing job [id: %s, status: %s]. It has been running for %s mins", flowRunner.getExecutableFlow().getId(), flowRunner.getExecutableFlow().getStatus(), TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()-flowRunner.getExecutableFlow().getStartTime())));
+                  flowRunner.kill();
+                }
+              }
+              lastLongRunningFlowCleanTime = currentTime;
+            }
+
             wait(RECENTLY_FINISHED_TIME_TO_LIVE);
           } catch (InterruptedException e) {
             logger.info("Interrupted. Probably to shut down.");
@@ -334,6 +352,11 @@ public class FlowRunnerManager implements EventListener,
           }
         }
       }
+    }
+
+    private boolean isFlowRunningLongerThan(ExecutableFlow flow, long flowMaxRunningTimeInMins) {
+      Set<Status> nonFinishingStatusAfterFlowStarts = new HashSet<>(Arrays.asList(Status.RUNNING, Status.QUEUED, Status.PAUSED, Status.FAILED_FINISHING));
+      return nonFinishingStatusAfterFlowStarts.contains(flow.getStatus()) && flow.getStartTime() > 0 && TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()-flow.getStartTime()) >= flowMaxRunningTimeInMins;
     }
 
     private void cleanOlderExecutionDirs() {
