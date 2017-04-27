@@ -338,7 +338,7 @@ public class FlowRunnerManager implements EventListener,
               for (FlowRunner flowRunner : runningFlows.values()) {
                 if (isFlowRunningLongerThan(flowRunner.getExecutableFlow(), flowMaxRunningTimeInMins)) {
                   logger.info(String.format("Killing job [id: %s, status: %s]. It has been running for %s mins", flowRunner.getExecutableFlow().getId(), flowRunner.getExecutableFlow().getStatus(), TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()-flowRunner.getExecutableFlow().getStartTime())));
-                  flowRunner.kill();
+                  flowRunner.kill("TimeBomb");
                 }
               }
               lastLongRunningFlowCleanTime = currentTime;

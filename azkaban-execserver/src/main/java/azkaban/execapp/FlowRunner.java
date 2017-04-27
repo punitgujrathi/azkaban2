@@ -932,7 +932,7 @@ public class FlowRunner extends EventHandler implements Runnable {
     interrupt();
   }
 
-  public void kill() {
+  private void kill() {
     synchronized (mainSyncObj) {
       logger.info("Kill has been called on flow " + execId);
 
