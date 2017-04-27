@@ -309,6 +309,7 @@ public class FlowRunnerManager implements EventListener,
       while (!shutdown) {
         synchronized (this) {
           try {
+            logger.info("Triggering cleanup timer");
             lastCleanerThreadCheckTime = System.currentTimeMillis();
 
             // Cleanup old stuff.
