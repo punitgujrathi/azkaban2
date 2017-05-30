@@ -50,7 +50,7 @@ public class CandidateSelector<K extends Comparable<K>, V> implements Selector<K
        return null;
      }
 
-     logger.debug("start candidate selection logic.");
+     logger.info("starting candidate selection logic.");
      logger.debug(String.format("candidate count before filtering: %s", candidateList.size()));
 
      // to keep the input untouched, we will form up a new list based off the filtering result.
@@ -79,7 +79,7 @@ public class CandidateSelector<K extends Comparable<K>, V> implements Selector<K
 
      // final work - find the best candidate from the filtered list.
      K executor = Collections.max(filteredList, comparator);
-     logger.debug(String.format("candidate selected %s",
+     logger.info(String.format("candidate selected %s",
          null == executor ? "(null)" : executor.toString()));
      return executor;
   }
