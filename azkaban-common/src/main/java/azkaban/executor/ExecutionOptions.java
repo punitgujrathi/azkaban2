@@ -274,7 +274,12 @@ public class ExecutionOptions {
         false));
 
     options.setMemoryCheck(wrapper.getBool(MEMORY_CHECK, true));
-    options.setExecutorGroup(wrapper.getString(EXECUTOR_GROUP,null));
+    // Executor group options
+    String executorGroup = null;
+    if (options.flowParameters.containsKey("executorGroup")){
+       executorGroup = options.flowParameters.get("executorGroup");
+    }
+    options.setExecutorGroup(wrapper.getString(EXECUTOR_GROUP,executorGroup));
 
     return options;
   }
