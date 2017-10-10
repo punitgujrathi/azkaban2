@@ -115,6 +115,10 @@ public class HttpRequestUtils {
     Map<String, String> flowParamGroup = getParamGroup(req, "flowOverride");
     execOptions.addAllFlowParameters(flowParamGroup);
 
+    if (flowParamGroup.containsKey("executorGroup")){
+      execOptions.setExecutorGroup(flowParamGroup.get("executorGroup"));
+    }
+
     if (hasParam(req, "disabled")) {
       String disabled = getParam(req, "disabled");
       if (!disabled.isEmpty()) {
