@@ -1,9 +1,8 @@
 buildscript {
   repositories {
     mavenCentral()
-    maven {
-      url 'https://plugins.gradle.org/m2/'
-    }
+    maven { url 'http://artifactory.fkinternal.com/artifactory/v1.0/artifacts/libs-snapshots-local' }
+    maven { url 'http://artifactory.fkinternal.com/artifactory/v1.0/artifacts/libs-release-local' }
   }
   dependencies {
     classpath 'com.linkedin:gradle-dustjs-plugin:1.0.0'
